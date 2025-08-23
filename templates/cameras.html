@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Камеры видеонаблюдения</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='custom.css') }}">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #dbefff, #f2f8fc);
+      background-attachment: fixed;
+      background-size: cover;
+    }
+
+    .navbar {
+      background-color: #005baa;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: white;
+    }
+
+    .navbar a {
+      color: white;
+      margin-left: 15px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .logo-box img {
+      height: 40px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 60px auto;
+      padding: 20px;
+    }
+
+    .btn-back {
+      background-color: #005baa;
+      color: white;
+      font-weight: 600;
+      padding: 8px 18px;
+      border: none;
+      border-radius: 8px;
+      text-decoration: none;
+      display: inline-block;
+      margin-bottom: 20px;
+      transition: background-color 0.2s ease-in-out;
+    }
+
+    .btn-back:hover {
+      background-color: #004080;
+    }
+
+    h2 {
+      color: #005baa;
+      margin-bottom: 30px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #map {
+      height: 400px;
+      border-radius: 12px;
+      margin-bottom: 40px;
+    }
+
+    .camera-card {
+      background-color: #ffffffcc;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .camera-name {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .camera-id {
+      color: #555;
+      margin-bottom: 12px;
+    }
+
+    .btn-primary {
+      background-color: #005baa;
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-primary:hover {
+      background-color: #004080;
+    }
+  </style>
+</head>
+<body>
+<div class="navbar">
+  <div class="logo-box">
+    <img src="{{ url_for('static', filename='kazpost_logo.png') }}" alt="Казпочта">
+  </div>
+  <div>
+    <a href="{{ url_for('edit_profile') }}">Профиль</a>
+    <a href="{{ url_for('logout') }}">Выйти</a>
+  </div>
+</div>
+
+<div class="container">
+  <!-- Добавлена кнопка Назад -->
+  <a href="javascript:history.back()" class="btn-back">← Назад</a>
+
+  <h2>Камеры видеонаблюдения</h2>
+
+  <div id="map"></div>
+
+  {% for camera in cameras %}
+    <div class="camera-card">
+      <div class="camera-name">{{ camera.name }}</div>
+      <div class="camera-id">ID: {{ camera.id }}</div>
+      <a href="{{ url_for('watch_camera', camera_id=camera.id) }}" class="btn-primary">Перейти к трансляции</a>
+    </div>
+  {% else %}
+    <p>У вас пока нет добавленных камер.</p>
+  {% endfor %}
+</div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  const map = L.map('map').setView([51.1605, 71.4704], 5);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+
+  {% for camera in cameras %}
+    {% if camera.latitude and camera.longitude %}
+      L.marker([{{ camera.latitude }}, {{ camera.longitude }}])
+        .addTo(map)
+        .bindPopup("<b>{{ camera.name }}</b><br>ID: {{ camera.id }}");
+    {% endif %}
+  {% endfor %}
+</script>
+</body>
+</html>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Казпочта</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='custom.css') }}">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: url('{{ url_for('static', filename='background.jpg') }}') no-repeat center center fixed;
+            background-size: cover;
+            color: #fff;
+        }
+
+        .navbar {
+            background-color: #005baa;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar img {
+            height: 40px;
+        }
+
+        .navbar a {
+            color: white;
+            margin-left: 15px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 120px 20px;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .hero h1 {
+            font-size: 48px;
+            color: #ffcb05;
+            animation: fadeInDown 1s ease;
+        }
+
+        .hero p {
+            font-size: 20px;
+            margin-top: 10px;
+        }
+
+        .section {
+            background-color: rgba(255, 255, 255, 0.9);
+            color: #000;
+            padding: 60px 20px;
+            border-radius: 16px;
+            margin: 40px auto;
+            max-width: 1000px;
+        }
+
+        .section h2 {
+            color: #005baa;
+            text-align: center;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <img src="{{ url_for('static', filename='kazpost_logo.png') }}" alt="Казпочта">
+        <div>
+            <a href="{{ url_for('login') }}">Войти</a>
+            <a href="{{ url_for('register') }}">Регистрация</a>
+        </div>
+    </div>
+
+    <div class="hero">
+        <h1>Добро пожаловать в Казпочту</h1>
+        <p>Надёжная почтовая служба по всей стране</p>
+    </div>
+
+    <div class="section">
+        <h2>О нас</h2>
+        <p>Казпочта — ведущий почтовый и логистический оператор в Казахстане. Мы предоставляем качественные почтовые, финансовые и цифровые услуги.</p>
+    </div>
+
+    <div class="section">
+        <h2>Наши услуги</h2>
+        <ul>
+            <li>Почтовые отправления</li>
+            <li>Финансовые переводы</li>
+            <li>Доставка документов и грузов</li>
+            <li>Электронная коммерция</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>Новости</h2>
+        <p>Мы запускаем новые цифровые сервисы и расширяем сеть отделений. Следите за нашими обновлениями!</p>
+    </div>
+</body>
+</html>

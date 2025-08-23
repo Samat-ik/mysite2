@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Личный кабинет</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='custom.css') }}">
+  <style>
+    :root {
+      --bg-color: linear-gradient(135deg, #dbefff, #f2f8fc);
+      --card-bg: #ffffffcc;
+      --text-color: #000;
+      --sidebar-bg: #ffffffaa;
+    }
+    body.dark {
+      --bg-color: linear-gradient(135deg, #1f1f1f, #2b2b2b);
+      --card-bg: #2c2c2ccc;
+      --text-color: #fff;
+      --sidebar-bg: #1c1c1cdd;
+    }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--bg-color);
+      color: var(--text-color);
+      transition: all 0.3s ease;
+      background-attachment: fixed;
+      background-size: cover;
+    }
+    .navbar {
+      background-color: #005baa;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: white;
+    }
+    .logo-box {
+      background-color: #005baa;
+      padding: 6px 12px;
+      border-radius: 6px;
+      display: inline-block;
+    }
+    .logo-box img {
+      height: 40px;
+    }
+    .navbar a {
+      color: white;
+      margin-left: 15px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .container {
+      display: flex;
+      height: 100vh;
+    }
+    .sidebar {
+      width: 260px;
+      background-color: var(--sidebar-bg);
+      backdrop-filter: blur(10px);
+      padding: 20px;
+      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .sidebar h3 {
+      color: #005baa;
+      margin-bottom: 20px;
+    }
+    .sidebar a {
+      display: block;
+      margin: 10px 0;
+      padding: 10px;
+      font-weight: bold;
+      text-decoration: none;
+      color: #005baa;
+      border-radius: 8px;
+      transition: background-color 0.2s;
+    }
+    .sidebar a:hover {
+      background-color: #005baa;
+      color: white;
+    }
+    .main-content {
+      flex-grow: 1;
+      padding: 40px;
+      overflow-y: auto;
+    }
+    .card {
+      background-color: var(--card-bg);
+      border-radius: 16px;
+      padding: 2rem;
+      max-width: 900px;
+      margin: auto;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+      transition: all 0.3s ease;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+    @keyframes fadeIn {
+      0% { opacity: 0; transform: translateY(30px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    .avatar {
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin: 20px auto;
+      border: 4px solid #005baa;
+      display: block;
+    }
+    .button {
+      display: inline-block;
+      margin: 10px 10px 0;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      background-color: #005baa;
+      color: white;
+    }
+    .theme-toggle, .lang-switcher {
+      margin-top: 20px;
+    }
+    select {
+      padding: 6px;
+      border-radius: 5px;
+    }
+    .stats {
+      margin-top: 20px;
+      font-size: 15px;
+      color: var(--text-color);
+    }
+
+    /* Почтовые услуги */
+    .postal-services {
+      margin-top: 40px;
+    }
+    .postal-services h3 {
+      color: #005baa;
+      font-size: 1.4rem;
+      margin-bottom: 1rem;
+    }
+    .postal-card {
+      display: flex;
+      justify-content: space-between;
+      background: #e9f2ff;
+      padding: 1rem 1.5rem;
+      margin-bottom: 10px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 91, 170, 0.2);
+      font-weight: bold;
+      color: #003d6b;
+    }
+  </style>
+</head>
+<body>
+<div class="navbar">
+  <div class="logo-box">
+    <img src="{{ url_for('static', filename='kazpost_logo.png') }}" alt="Казпочта">
+  </div>
+  <div>
+    <a href="{{ url_for('edit_profile') }}">Профиль</a>
+    <a href="{{ url_for('logout') }}">Выйти</a>
+  </div>
+</div>
+
+<div class="container">
+  <!-- Левая панель -->
+  <div class="sidebar">
+    <div>
+      <h3>Меню</h3>
+      <a href="{{ url_for('dashboard') }}"> Главная</a>
+      <a href="{{ url_for('edit_profile') }}"> Профиль</a>
+      <a href="{{ url_for('cameras') }}"> Мои камеры</a>
+      <a href="{{ url_for('add_camera') }}"> Добавить камеру</a>
+      <a href="{{ url_for('statistics') }}"> Статистика</a>
+      <li><a href="{{ url_for('storage') }}">Хранилище</a></li>
+      <li>
+  <a href="{{ url_for('postal_services') }}">
+    <i class="bi bi-envelope"></i> Почтовые услуги
+  </a>
+</li>
+    </div>
+
+    <div>
+      <div class="theme-toggle">
+        <button class="button" onclick="toggleTheme()">Сменить тему</button>
+      </div>
+      <div class="lang-switcher">
+        <label for="lang">🌐 Язык:</label>
+        <select id="lang" onchange="alert('Переключение языка ещё не реализовано')">
+          <option value="ru" selected>Русский</option>
+          <option value="en">English</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Контент -->
+  <div class="main-content">
+    <div class="card">
+      <h2>Добро пожаловать, {{ current_user.username }}!</h2>
+      <p>Email: {{ current_user.email or '–' }}</p>
+      <p>ID: {{ current_user.id }}</p>
+      <p>Последний вход: {{ current_user.last_login or '–' }}</p>
+
+      <img class="avatar"
+           src="{{ url_for('static', filename='Avatars/' + (current_user.avatar or 'default.png')) }}"
+           alt="Аватар">
+
+      <div class="stats">
+        <p>Всего камер: <strong>{{ total_cameras or 0 }}</strong></p>
+        {% if last_camera_name %}
+          <p>Последняя камера: <strong>{{ last_camera_name }}</strong></p>
+        {% endif %}
+      </div>
+
+
+    </div>
+  </div>
+</div>
+
+<script>
+  const prefersDark = localStorage.getItem("theme") === "dark";
+  if (prefersDark) document.body.classList.add("dark");
+
+  function toggleTheme() {
+    document.body.classList.toggle('dark');
+    localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
+  }
+</script>
+</body>
+</html>

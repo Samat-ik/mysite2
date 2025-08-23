@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Добавить камеру</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='custom.css') }}">
+</head>
+<body style="background-color: #f0f2f5; font-family: 'Segoe UI', sans-serif;">
+    <div class="navbar" style="background-color:#005baa; padding:1rem 2rem; color:white;">
+        <a href="{{ url_for('dashboard') }}" style="color:white; text-decoration:none; font-weight:bold;">← Назад</a>
+    </div>
+
+    <div class="card" style="background:white; max-width:600px; margin:2rem auto; padding:2rem; border-radius:12px;">
+        <h2 style="color:#005baa;">Добавить камеру</h2>
+        <form method="POST">
+            <label>Название камеры:</label><br>
+            <input type="text" name="name" required><br><br>
+
+            <label>Описание:</label><br>
+            <textarea name="description"></textarea><br><br>
+
+            <label>Ссылка на трансляцию:</label><br>
+            <input type="text" name="stream_url" required><br><br>
+
+            <button type="submit" style="padding:10px 20px; background-color:#005baa; color:white; border:none; border-radius:8px;">Сохранить</button>
+        </form>
+    </div>
+</body>
+</html>

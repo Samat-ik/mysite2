@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">Почтовые услуги</h2>
+
+    <!-- 🔍 Фильтрация -->
+    <form method="POST" class="row g-3 mb-4">
+        <div class="col-md-4">
+            <select name="filter_type" class="form-select">
+                <option value="city">По городу</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <input type="text" name="filter_value" class="form-control" placeholder="Введите город">
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">Применить</button>
+        </div>
+    </form>
+
+    <!-- 📋 Карточки -->
+    <div class="card mb-3 p-3">Принято карточек Print2Card: <strong>{{ stats.print2card }}</strong> шт</div>
+    <div class="card mb-3 p-3">Отправления на хранении (14–31 дней): <strong>{{ stats.storage_14_31 }}</strong> шт</div>
+    <div class="card mb-3 p-3">Отправления на хранении (более 31 дня): <strong>{{ stats.storage_over_31 }}</strong> шт</div>
+
+    <!-- 📊 Диаграмма -->
+    <div class="card p-4 mt-4">
+        <h5>Диаграмма по городу: {{ filter_label }}</h5>
+        <canvas id="postalChart"></canvas>
+    </div>
+</div>
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h3>Добавить статистику</h3>
+    <form method="POST">
+        <input name="city" class="form-control mb-2" placeholder="Город" required>
+        <input name="print2card" type="number" class="form-control mb-2" placeholder="Print2Card" required>
+        <input name="storage_14_31" type="number" class="form-control mb-2" placeholder="Storage 14-31" required>
+        <input name="storage_over_31" type="number" class="form-control mb-2" placeholder="Storage over 31" required>
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+    </form>
+</div>
+{% endblock %}
+
+<!-- 📈 Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('postalChart').getContext('2d');
+    const postalChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Print2Card', 'Хранение (14–31)', 'Хранение (31+)'],
+            datasets: [{
+                label: 'Количество',
+                data: [
+                    {{ stats.print2card }},
+                    {{ stats.storage_14_31 }},
+                    {{ stats.storage_over_31 }}
+                ],
+                backgroundColor: ['#005baa', '#0077cc', '#3399ff']
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    stepSize: 1
+                }
+            }
+        }
+    });
+    const data = {
+    labels: ['Print2Card', 'Хранение 14-31', 'Хранение >31'],
+    datasets: [{
+        label: 'Статистика',
+        data: [{{ stats.print2card }}, {{ stats.storage_14_31 }}, {{ stats.storage_over_31 }}],
+        borderWidth: 1
+    }]
+};
+
+</script>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+  <h2 class="mb-4">Введите 2FA код</h2>
+  <form method="POST">
+    <div class="mb-3">
+      <input type="text" name="code" class="form-control" placeholder="Введите код из приложения">
+    </div>
+    <button type="submit" class="btn btn-primary">Подтвердить</button>
+  </form>
+</div>
+{% endblock %}

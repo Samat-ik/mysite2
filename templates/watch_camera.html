@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Камеры видеонаблюдения{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+
+
+  <!-- Заголовок -->
+  <h3 class="mb-4 fw-bold text-primary">
+     Камеры видеонаблюдения
+  </h3>
+
+  <!-- Список камер -->
+  {% for camera in cameras %}
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <h5 class="card-title fw-bold">{{ camera.name }}</h5>
+        <p class="card-text">ID: {{ camera.id }}</p>
+        <a href="{{ url_for('watch_camera', camera_id=camera.id) }}" class="btn btn-primary">
+          Перейти к трансляции
+        </a>
+      </div>
+    </div>
+  {% else %}
+    <p class="text-muted">Нет добавленных камер.</p>
+  {% endfor %}
+</div>
+{% endblock %}
