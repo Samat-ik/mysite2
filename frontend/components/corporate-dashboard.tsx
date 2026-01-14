@@ -195,6 +195,8 @@ export default function CorporateEmployeeManagement() {
     password: '', 
     phone: ''
   });
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordTouched, setPasswordTouched] = useState(false);
 
   const handleLogin = (e: any) => {
     e.preventDefault();
@@ -217,9 +219,50 @@ export default function CorporateEmployeeManagement() {
     setLoginData(prev => ({ ...prev, [name]: value }));
   };
 
+  const getPasswordStrength = (password: string) => {
+    const checks = {
+      length: password.length >= 8,
+      uppercase: /[A-Z]/.test(password),
+      lowercase: /[a-z]/.test(password),
+      number: /[0-9]/.test(password),
+      special: /[!@#$%^&*(),.?":{}|<>]/.test(password),
+    };
+    
+    const passedChecks = Object.values(checks).filter(Boolean).length;
+    const totalChecks = Object.keys(checks).length;
+    const percentage = (passedChecks / totalChecks) * 100;
+    
+    return { checks, percentage, passedChecks, totalChecks };
+  };
+
+  const validatePassword = (password: string): string => {
+    if (password.length < 8) {
+      return 'Пароль кемінде 8 символ болуы керек';
+    }
+    if (!/[A-Z]/.test(password)) {
+      return 'Парольде кемінде бір үлкен әріп болуы керек';
+    }
+    if (!/[a-z]/.test(password)) {
+      return 'Парольде кемінде бір кіші әріп болуы керек';
+    }
+    if (!/[0-9]/.test(password)) {
+      return 'Парольде кемінде бір сан болуы керек';
+    }
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+      return 'Парольде кемінде бір арнайы символ болуы керек (!@#$%^&*...)';
+    }
+    return '';
+  };
+
   const handleRegisterInputChange = (e: any) => {
     const { name, value } = e.target;
     setRegisterData(prev => ({ ...prev, [name]: value }));
+    
+    if (name === 'password') {
+      setPasswordTouched(true);
+      const error = validatePassword(value);
+      setPasswordError(error);
+    }
   };
 
   const [activeTab, setActiveTab] = useState("home")
@@ -300,7 +343,7 @@ export default function CorporateEmployeeManagement() {
             <div className="flex items-center justify-center mb-8">
               <div className="flex items-center gap-3">
                 <div className="flex aspect-square size-12 items-center justify-center rounded-2xl bg-white p-2">
-                  <img src="/images/qazpost-logo.svg" alt="Qazpost" className="size-10 object-contain" />
+                  <img src="/images/qazpost-logo.png" alt="Qazpost" className="size-10 object-contain" />
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold">Қазпошта</h1>
@@ -309,65 +352,78 @@ export default function CorporateEmployeeManagement() {
               </div>
             </div>
 
-            {showLogin && (
-              <div>
-                <h2 className="text-2xl font-bold mb-6">Вход</h2>
-                <form onSubmit={handleLogin} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="username" className="text-sm font-medium text-gray-700">
-                      Имя пользователя
-                    </Label>
-                    <Input
-                      id="username"
-                      name="email"
-                      type="text"
-                      value={loginData.email}
-                      onChange={handleLoginInputChange}
-                      required
-                      className="w-full border border-gray-300 rounded px-3 py-2"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password" className="text-sm font-medium text-gray-700">
-                      Пароль
-                    </Label>
-                    <Input
-                      id="password"
-                      name="password"
-                      type="password"
-                      value={loginData.password}
-                      onChange={handleLoginInputChange}
-                      required
-                      className="w-full border border-gray-300 rounded px-3 py-2"
-                    />
-                  </div>
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded font-medium"
-                  >
-                    Войти
-                  </Button>
-                </form>
-                <div className="mt-4">
-                  <p className="text-sm text-gray-600">
-                    Нет аккаунта?{' '}
-                    <button
-                      onClick={() => {
-                        setShowLogin(false);
-                        setShowRegister(true);
-                      }}
-                      className="text-blue-600 hover:underline font-medium"
+            <AnimatePresence mode="wait">
+              {showLogin && (
+                <motion.div
+                  key="login"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <h2 className="text-2xl font-bold mb-6">Вход</h2>
+                  <form onSubmit={handleLogin} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="username" className="text-sm font-medium text-gray-700">
+                        Имя пользователя
+                      </Label>
+                      <Input
+                        id="username"
+                        name="email"
+                        type="text"
+                        value={loginData.email}
+                        onChange={handleLoginInputChange}
+                        required
+                        className="w-full border border-gray-300 rounded px-3 py-2"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+                        Пароль
+                      </Label>
+                      <Input
+                        id="password"
+                        name="password"
+                        type="password"
+                        value={loginData.password}
+                        onChange={handleLoginInputChange}
+                        required
+                        className="w-full border border-gray-300 rounded px-3 py-2"
+                      />
+                    </div>
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded font-medium"
                     >
-                      Регистрация
-                    </button>
-                  </p>
-                </div>
-              </div>
-            )}
+                      Войти
+                    </Button>
+                  </form>
+                  <div className="mt-4">
+                    <p className="text-sm text-gray-600">
+                      Нет аккаунта?{' '}
+                      <button
+                        onClick={() => {
+                          setShowLogin(false);
+                          setShowRegister(true);
+                        }}
+                        className="text-blue-600 hover:underline font-medium"
+                      >
+                        Регистрация
+                      </button>
+                    </p>
+                  </div>
+                </motion.div>
+              )}
 
-            {showRegister && (
-              <div>
-                <h2 className="text-2xl font-bold mb-6">Регистрация</h2>
+              {showRegister && (
+                <motion.div
+                  key="register"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <h2 className="text-2xl font-bold mb-6">Регистрация</h2>
                 <form onSubmit={handleRegister} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="reg-username" className="text-sm font-medium text-gray-700">
@@ -421,9 +477,74 @@ export default function CorporateEmployeeManagement() {
                       type="password"
                       value={registerData.password}
                       onChange={handleRegisterInputChange}
+                      onBlur={() => setPasswordTouched(true)}
                       required
-                      className="w-full border border-gray-300 rounded px-3 py-2"
+                      className={cn(
+                        "w-full border rounded px-3 py-2",
+                        passwordTouched && passwordError 
+                          ? "border-red-500 focus:border-red-500 focus:ring-red-500" 
+                          : passwordTouched && !passwordError && registerData.password
+                          ? "border-green-500 focus:border-green-500 focus:ring-green-500"
+                          : "border-gray-300"
+                      )}
                     />
+                    {registerData.password && (
+                      <div className="space-y-2">
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div
+                            className={cn(
+                              "h-2 rounded-full transition-all duration-300",
+                              (() => {
+                                const strength = getPasswordStrength(registerData.password);
+                                if (strength.percentage === 100) return "bg-green-500";
+                                if (strength.percentage >= 60) return "bg-yellow-500";
+                                if (strength.percentage >= 40) return "bg-orange-500";
+                                return "bg-red-500";
+                              })()
+                            )}
+                            style={{ width: `${getPasswordStrength(registerData.password).percentage}%` }}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <div className={cn("text-xs flex items-center gap-2", getPasswordStrength(registerData.password).checks.length ? "text-green-600" : "text-gray-500")}>
+                            <span className={cn("text-xs", getPasswordStrength(registerData.password).checks.length ? "text-green-600" : "text-gray-400")}>
+                              {getPasswordStrength(registerData.password).checks.length ? "✓" : "○"}
+                            </span>
+                            Кемінде 8 символ
+                          </div>
+                          <div className={cn("text-xs flex items-center gap-2", getPasswordStrength(registerData.password).checks.uppercase ? "text-green-600" : "text-gray-500")}>
+                            <span className={cn("text-xs", getPasswordStrength(registerData.password).checks.uppercase ? "text-green-600" : "text-gray-400")}>
+                              {getPasswordStrength(registerData.password).checks.uppercase ? "✓" : "○"}
+                            </span>
+                            Кемінде бір үлкен әріп (A-Z)
+                          </div>
+                          <div className={cn("text-xs flex items-center gap-2", getPasswordStrength(registerData.password).checks.lowercase ? "text-green-600" : "text-gray-500")}>
+                            <span className={cn("text-xs", getPasswordStrength(registerData.password).checks.lowercase ? "text-green-600" : "text-gray-400")}>
+                              {getPasswordStrength(registerData.password).checks.lowercase ? "✓" : "○"}
+                            </span>
+                            Кемінде бір кіші әріп (a-z)
+                          </div>
+                          <div className={cn("text-xs flex items-center gap-2", getPasswordStrength(registerData.password).checks.number ? "text-green-600" : "text-gray-500")}>
+                            <span className={cn("text-xs", getPasswordStrength(registerData.password).checks.number ? "text-green-600" : "text-gray-400")}>
+                              {getPasswordStrength(registerData.password).checks.number ? "✓" : "○"}
+                            </span>
+                            Кемінде бір сан (0-9)
+                          </div>
+                          <div className={cn("text-xs flex items-center gap-2", getPasswordStrength(registerData.password).checks.special ? "text-green-600" : "text-gray-500")}>
+                            <span className={cn("text-xs", getPasswordStrength(registerData.password).checks.special ? "text-green-600" : "text-gray-400")}>
+                              {getPasswordStrength(registerData.password).checks.special ? "✓" : "○"}
+                            </span>
+                            Кемінде бір арнайы символ (!@#$%...)
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {passwordTouched && passwordError && (
+                      <p className="text-sm text-red-600">{passwordError}</p>
+                    )}
+                    {passwordTouched && !passwordError && registerData.password && (
+                      <p className="text-sm text-green-600 font-medium">✓ Пароль стандартқа сай</p>
+                    )}
                   </div>
                   <Button 
                     type="submit" 
@@ -446,8 +567,9 @@ export default function CorporateEmployeeManagement() {
                     </button>
                   </p>
                 </div>
-              </div>
-            )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         </div>
       </div>
@@ -487,7 +609,7 @@ export default function CorporateEmployeeManagement() {
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-3">
                 <div className="flex aspect-square size-10 items-center justify-center rounded-2xl bg-white p-1">
-                  <img src="/images/qazpost-logo.svg" alt="Qazpost" className="size-8 object-contain" />
+                  <img src="/images/qazpost-logo.png" alt="Qazpost" className="size-8 object-contain" />
                 </div>
                 <div>
                   <h2 className="font-semibold">Қазпошта</h2>
@@ -615,7 +737,7 @@ export default function CorporateEmployeeManagement() {
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-3">
                 <div className="flex aspect-square size-10 items-center justify-center rounded-2xl bg-white p-1">
-                  <img src="/images/qazpost-logo.svg" alt="Qazpost" className="size-8 object-contain" />
+                  <img src="/images/qazpost-logo.png" alt="Qazpost" className="size-8 object-contain" />
                 </div>
                 <div>
                   <h2 className="font-semibold">Қазпошта</h2>
@@ -870,14 +992,6 @@ export default function CorporateEmployeeManagement() {
               </div>
             </div>
 
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeTab}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-              >
                 <TabsContent value="home" className="space-y-8 mt-0">
                   <section>
                     <motion.div
@@ -1760,8 +1874,6 @@ export default function CorporateEmployeeManagement() {
                     </Card>
                   </div>
                 </TabsContent>
-              </motion.div>
-            </AnimatePresence>
           </Tabs>
         </main>
       </div>

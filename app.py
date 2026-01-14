@@ -8,7 +8,7 @@ import qrcode
 
 from flask import (
     Flask, render_template, request, redirect, session,
-    url_for, flash, send_from_directory, abort
+    url_for, flash, send_from_directory, abort, jsonify
 )
 from flask_login import (
     LoginManager, login_user, logout_user,
@@ -18,7 +18,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 
 from extensions import db, login_manager, init_extensions
-from models import User, Camera, PostalStats
+from models import User, Camera, PostalStats, StatisticsEntry
 from forms import EditProfileForm
 
 app = Flask(__name__)
@@ -356,6 +356,305 @@ def update_statistics():
 def users():
     all_users = User.query.all()
     return render_template('users.html', users=all_users)
+
+
+# ========== API ENDPOINTS FOR NEXT.JS FRONTEND ==========
+
+@app.route('/api/user/current')
+@login_required
+def api_current_user():
+    """Get current authenticated user"""
+    return jsonify({
+        'id': current_user.id,
+        'username': current_user.username,
+        'email': current_user.email,
+        'phone_number': current_user.phone_number,
+        'avatar': current_user.avatar,
+        'postal_code': current_user.postal_code
+    })
+
+
+@app.route('/api/login', methods=['POST'])
+def api_login():
+    """API login endpoint"""
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+    
+    user = User.query.filter_by(username=username).first()
+    
+    if user and check_password_hash(user.password, password):
+        session['pre_2fa_user_id'] = user.id
+        return jsonify({
+            'success': True,
+            'requires_2fa': True,
+            'message': '2FA verification required'
+        })
+    
+    return jsonify({
+        'success': False,
+        'error': 'Неверный логин или пароль'
+    }), 401
+
+
+@app.route('/api/verify-2fa', methods=['POST'])
+def api_verify_2fa():
+    """API 2FA verification endpoint"""
+    user_id = session.get('pre_2fa_user_id')
+    if not user_id:
+        return jsonify({'success': False, 'error': 'Session expired'}), 401
+    
+    user = User.query.get(int(user_id))
+    data = request.get_json()
+    code = data.get('code')
+    
+    if pyotp.TOTP(user.otp_secret).verify(code):
+        session.pop('pre_2fa_user_id', None)
+        login_user(user, remember=True)
+        return jsonify({
+            'success': True,
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email
+            }
+        })
+    
+    return jsonify({'success': False, 'error': 'Неверный код подтверждения'}), 401
+
+
+@app.route('/api/logout', methods=['POST'])
+@login_required
+def api_logout():
+    """API logout endpoint"""
+    logout_user()
+    return jsonify({'success': True})
+
+
+@app.route('/api/register', methods=['POST'])
+def api_register():
+    """API register endpoint"""
+    data = request.get_json()
+    username = data.get('username')
+    email = data.get('email', '').strip()
+    phone_number = data.get('phone_number', '').strip()
+    password = data.get('password')
+    
+    if not email and not phone_number:
+        return jsonify({'success': False, 'error': 'Email немесе телефон нөмірі міндетті'}), 400
+    
+    if User.query.filter_by(username=username).first():
+        return jsonify({'success': False, 'error': 'Пайдаланушы аты бұрыннан бар'}), 400
+    
+    if email and User.query.filter_by(email=email).first():
+        return jsonify({'success': False, 'error': 'Бұл email бұрыннан тіркелген'}), 400
+    
+    if phone_number and User.query.filter_by(phone_number=phone_number).first():
+        return jsonify({'success': False, 'error': 'Бұл телефон нөмірі бұрыннан тіркелген'}), 400
+    
+    otp_secret = pyotp.random_base32()
+    hashed_pw = generate_password_hash(password)
+    
+    user = User(
+        username=username,
+        email=email if email else None,
+        phone_number=phone_number if phone_number else None,
+        password=hashed_pw,
+        otp_secret=otp_secret
+    )
+    db.session.add(user)
+    db.session.commit()
+    
+    otp_uri = pyotp.totp.TOTP(otp_secret).provisioning_uri(name=username, issuer_name="2FA Flask App")
+    img = qrcode.make(otp_uri)
+    buf = io.BytesIO()
+    img.save(buf, format='PNG')
+    qr_code = base64.b64encode(buf.getvalue()).decode('utf-8')
+    
+    return jsonify({
+        'success': True,
+        'qr_code': qr_code,
+        'username': username
+    })
+
+
+@app.route('/api/cameras')
+@login_required
+def api_cameras():
+    """Get all cameras for current user"""
+    cameras = Camera.query.filter_by(user_id=current_user.id).all()
+    return jsonify({
+        'cameras': [{
+            'id': c.id,
+            'name': c.name,
+            'description': c.description,
+            'stream_url': c.stream_url,
+            'type': c.type,
+            'status': c.status,
+            'created_at': c.created_at.isoformat() if c.created_at else None
+        } for c in cameras]
+    })
+
+
+@app.route('/api/cameras', methods=['POST'])
+@login_required
+def api_add_camera():
+    """Add a new camera"""
+    data = request.get_json()
+    new_camera = Camera(
+        name=data.get('name'),
+        description=data.get('description'),
+        stream_url=data.get('stream_url'),
+        user_id=current_user.id,
+        created_at=datetime.utcnow()
+    )
+    db.session.add(new_camera)
+    db.session.commit()
+    return jsonify({
+        'success': True,
+        'camera': {
+            'id': new_camera.id,
+            'name': new_camera.name,
+            'description': new_camera.description,
+            'stream_url': new_camera.stream_url
+        }
+    }), 201
+
+
+@app.route('/api/cameras/<int:camera_id>')
+@login_required
+def api_get_camera(camera_id):
+    """Get a specific camera"""
+    camera = Camera.query.filter_by(id=camera_id, user_id=current_user.id).first_or_404()
+    return jsonify({
+        'id': camera.id,
+        'name': camera.name,
+        'description': camera.description,
+        'stream_url': camera.stream_url,
+        'type': camera.type,
+        'status': camera.status,
+        'created_at': camera.created_at.isoformat() if camera.created_at else None
+    })
+
+
+@app.route('/api/statistics')
+@login_required
+def api_statistics():
+    """Get statistics"""
+    total = Camera.query.count()
+    today = Camera.query.filter(Camera.created_at >= datetime.utcnow().date()).count()
+    active = Camera.query.filter_by(status='active').count()
+    types = db.session.query(Camera.type).distinct().count()
+    latest_cameras = Camera.query.order_by(Camera.created_at.desc()).limit(5).all()
+    
+    return jsonify({
+        'total': total,
+        'today': today,
+        'active': active,
+        'types': types,
+        'latest_cameras': [{
+            'id': c.id,
+            'name': c.name,
+            'created_at': c.created_at.isoformat() if c.created_at else None
+        } for c in latest_cameras]
+    })
+
+
+@app.route('/api/postal-services')
+@login_required
+def api_postal_services():
+    """Get postal services statistics"""
+    entries = StatisticsEntry.query.all()
+    total_print2card = sum(e.print2card for e in entries)
+    total_14_31 = sum(e.storage_14_31 for e in entries)
+    total_over_31 = sum(e.storage_over_31 for e in entries)
+    
+    return jsonify({
+        'stats': {
+            'print2card': total_print2card,
+            'storage_14_31': total_14_31,
+            'storage_over_31': total_over_31
+        },
+        'entries': [{
+            'id': e.id,
+            'city': e.city,
+            'print2card': e.print2card,
+            'storage_14_31': e.storage_14_31,
+            'storage_over_31': e.storage_over_31,
+            'created_at': e.created_at.isoformat() if e.created_at else None
+        } for e in entries]
+    })
+
+
+@app.route('/api/users')
+@login_required
+def api_users():
+    """Get all users"""
+    all_users = User.query.all()
+    return jsonify({
+        'users': [{
+            'id': u.id,
+            'username': u.username,
+            'email': u.email,
+            'phone_number': u.phone_number,
+            'avatar': u.avatar
+        } for u in all_users]
+    })
+
+
+@app.route('/api/storage')
+@login_required
+def api_storage():
+    """Get user storage files"""
+    user_folder = os.path.join(app.config['USER_FILES_FOLDER'], str(current_user.id))
+    os.makedirs(user_folder, exist_ok=True)
+    files = os.listdir(user_folder)
+    return jsonify({'files': files})
+
+
+@app.route('/api/storage/upload', methods=['POST'])
+@login_required
+def api_upload_file():
+    """Upload a file to user storage"""
+    if 'file' not in request.files:
+        return jsonify({'success': False, 'error': 'No file provided'}), 400
+    
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'success': False, 'error': 'No file selected'}), 400
+    
+    user_folder = os.path.join(app.config['USER_FILES_FOLDER'], str(current_user.id))
+    os.makedirs(user_folder, exist_ok=True)
+    filename = secure_filename(file.filename)
+    file.save(os.path.join(user_folder, filename))
+    
+    return jsonify({'success': True, 'filename': filename})
+
+
+@app.route('/api/dashboard')
+@login_required
+def api_dashboard():
+    """Get dashboard data"""
+    user = current_user
+    branches = ['Алматы', 'Астана', 'Шымкент', 'Актобе', 'Караганда']
+    counts = [276, 113, 156, 80, 63]
+    
+    user_cameras = Camera.query.filter_by(user_id=user.id).all()
+    total_cameras = len(user_cameras)
+    last_camera = user_cameras[-1].name if user_cameras else '—'
+    
+    return jsonify({
+        'user': {
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'avatar': user.avatar
+        },
+        'total_cameras': total_cameras,
+        'last_camera': last_camera,
+        'branches': branches,
+        'counts': counts
+    })
 
 
 # Запуск
