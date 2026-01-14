@@ -1,5 +1,5 @@
 body {
-  background-color: #f9f9f9;
+  background-color: #f8f9fa;
   font-family: Arial, sans-serif;
 }
 
@@ -11,31 +11,28 @@ h1 {
 .btn {
   border-radius: 8px;
 }
+
 img.rounded-circle {
   object-fit: cover;
   border: 3px solid #333;
   margin-bottom: 15px;
 }
-body {
-    background-color: #f8f9fa;
-}
 
 .card {
-    border-radius: 10px;
+  border-radius: 10px;
 }
 
 .btn-warning {
-    background-color: #ffcb05;
-    border-color: #ffcb05;
-    color: black;
+  background-color: #ffcb05;
+  border-color: #ffcb05;
+  color: black;
 }
 
 .btn-warning:hover {
-    background-color: #e6b800;
-    border-color: #e6b800;
+  background-color: #e6b800;
+  border-color: #e6b800;
 }
-<style>
-    .modal-backdrop.show {
-        background-color: rgba(0, 0, 0, 0.3); /* Прозрачный чёрный */
-    }
-</style>
+
+.modal-backdrop.show {
+  background-color: rgba(0, 0, 0, 0.3); /* Прозрачный чёрный */
+}
